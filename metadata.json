@@ -1,0 +1,6 @@
+{
+  "name": "AstraFi",
+  "description": "Premium DeFi Yield Vault Dashboard & Portfolio Tracker with Simulated Trading, Yield Optimizer, and LP Copier.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
