@@ -79,13 +79,85 @@ export default function App() {
   const [aiError, setAiError] = useState<string | null>(null);
 
   // Wallet State
-  const [isConnected, setIsConnected] = useState<boolean>(true);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
   const [walletAddress, setWalletAddress] = useState<string>('0x3F2bA723f993d0AcA32A1389B0019C874B6c89A1');
   const [network, setNetwork] = useState<'arbitrum_mainnet' | 'arbitrum_sepolia' | 'ethereum'>('arbitrum_mainnet');
   const [usdcBalance, setUsdcBalance] = useState<number>(45000);
   const [ethBalance, setEthBalance] = useState<number>(24.85); // ~$74,550
   const [arbBalance, setArbBalance] = useState<number>(3800); // ~$3,800
   const [accruedRewards, setAccruedRewards] = useState<number>(142.84);
+
+  // MetaMask real connection handler
+  const handleConnect = async () => {
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      try {
+        const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+        if (accounts && accounts.length > 0) {
+          setWalletAddress(accounts[0]);
+          setIsConnected(true);
+          triggerToast('Successfully connected to MetaMask!', 'success');
+          
+          // Try to fetch real ETH balance
+          try {
+            const balanceHex = await (window as any).ethereum.request({
+              method: 'eth_getBalance',
+              params: [accounts[0], 'latest']
+            });
+            const realEth = parseInt(balanceHex, 16) / 1e18;
+            setEthBalance(realEth > 0 ? realEth : 24.85);
+          } catch (e) {
+            console.warn('Could not fetch real ETH balance, using simulated balance.');
+          }
+        }
+      } catch (error: any) {
+        console.error('MetaMask connection error', error);
+        triggerToast(error.message || 'MetaMask connection rejected', 'warning');
+      }
+    } else {
+      // Fallback for sandboxed preview container or normal mobile browsers
+      setIsConnected(true);
+      setWalletAddress('0x3F2bA723f993d0AcA32A1389B0019C874B6c89A1');
+      triggerToast('No MetaMask extension detected. Connected simulated sandbox wallet!', 'info');
+    }
+  };
+
+  // Listen for account and network changes in MetaMask
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (accounts.length > 0) {
+          setWalletAddress(accounts[0]);
+          setIsConnected(true);
+        } else {
+          setIsConnected(false);
+        }
+      };
+
+      const handleChainChanged = () => {
+        window.location.reload();
+      };
+
+      (window as any).ethereum.on('accountsChanged', handleAccountsChanged);
+      (window as any).ethereum.on('chainChanged', handleChainChanged);
+
+      // Check if already authorized
+      (window as any).ethereum.request({ method: 'eth_accounts' })
+        .then((accounts: string[]) => {
+          if (accounts && accounts.length > 0) {
+            setWalletAddress(accounts[0]);
+            setIsConnected(true);
+          }
+        })
+        .catch(console.error);
+
+      return () => {
+        if ((window as any).ethereum.removeListener) {
+          (window as any).ethereum.removeListener('accountsChanged', handleAccountsChanged);
+          (window as any).ethereum.removeListener('chainChanged', handleChainChanged);
+        }
+      };
+    }
+  }, []);
 
   // Notification Toast state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'warning' } | null>(null);
@@ -525,11 +597,7 @@ Always provide professional, precise, scannable, and encouraging DeFi recommenda
               </div>
             ) : (
               <button
-                onClick={() => {
-                  setIsConnected(true);
-                  setWalletAddress('0x3F2bA723f993d0AcA32A1389B0019C874B6c89A1');
-                  triggerToast('Arbitrum Web3 wallet connected successfully!', 'success');
-                }}
+                onClick={handleConnect}
                 className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-medium text-sm px-4 py-2 rounded-xl shadow-lg shadow-indigo-500/20 transition-all duration-200"
               >
                 <Wallet className="h-4 w-4" />
@@ -581,10 +649,7 @@ Always provide professional, precise, scannable, and encouraging DeFi recommenda
             <div className="text-sm text-slate-300">
               Your wallet is currently disconnected. App displays sandbox telemetry. 
               <button 
-                onClick={() => {
-                  setIsConnected(true);
-                  triggerToast('Connected to simulated environment', 'success');
-                }} 
+                onClick={handleConnect} 
                 className="text-cyan-400 hover:underline ml-1 font-semibold"
               >
                 Connect Wallet
