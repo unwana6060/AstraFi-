@@ -1,51 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;750&family=Space+Grotesk:wght@450;550;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white;
-    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    @apply bg-[#070709] text-slate-100 antialiased selection:bg-emerald-500 selection:text-black;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
   }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #020617;
+  background: #070709;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
+  background: #15151c;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #232331;
 }
 
-/* Custom visual animations & details */
+/* Custom emerald glow backgrounds and utility elements */
 @keyframes pulseGlow {
   0%, 100% {
-    opacity: 0.15;
+    opacity: 0.1;
     transform: scale(1);
   }
   50% {
-    opacity: 0.25;
-    transform: scale(1.05);
+    opacity: 0.18;
+    transform: scale(1.08);
   }
 }
 
 .ambient-glow {
   position: absolute;
-  filter: blur(80px);
+  filter: blur(100px);
   border-radius: 50%;
   pointer-events: none;
   z-index: 0;
-  animation: pulseGlow 8s ease-in-out infinite;
+  animation: pulseGlow 10s ease-in-out infinite;
 }
 
 .panel-dark {
-  @apply bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 relative overflow-hidden;
+  @apply bg-[#101014] border border-[#1d1d25] rounded-xl p-5 relative overflow-hidden transition-all duration-200;
+}
+
+.panel-dark:hover {
+  @apply border-[#2a2a35];
+}
+
+/* Hide spin buttons for numeric inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
 }
